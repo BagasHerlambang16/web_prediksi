@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<h2>Selamat Datang</h2>
+<p>Anda login dengan username: <strong>{{ session['user'] }}</strong></p>
+
+<h3>Nama Sistem</h3>
+<p><strong>Sistem Prediksi Pertumbuhan Penduduk</strong></p>
+
+<h3>Fitur yang Tersedia</h3>
+<ul>
+    <li><strong>Halaman Pertumbuhan Penduduk:</strong> Menampilkan visualisasi data historis pertumbuhan penduduk per tahun.</li>
+    <li><strong>Halaman Perbandingan Model:</strong> Membandingkan performa model (ARIMA, SARIMA, Exponential Smoothing) menggunakan metrik evaluasi seperti RMSE, MAE, dan lainnya.</li>
+    <li><strong>Halaman Prediksi Pertumbuhan:</strong> Memungkinkan pengguna untuk melakukan prediksi jumlah penduduk berdasarkan tahun dan bulan tertentu.</li>
+    <li><strong>Halaman Riwayat Prediksi:</strong> Menampilkan daftar hasil prediksi yang telah disimpan sebelumnya.</li>
+    <li><strong>Halaman Detail Prediksi:</strong> Menampilkan rincian hasil prediksi dan menyediakan opsi untuk mengunduh hasil dalam format PDF dan Excel.</li>
+</ul>
+
+<p>Gunakan menu di samping untuk mengakses fitur sistem prediksi.</p>
+
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Pertumbuhan Penduduk{% endblock %}
+{% block content %}
+
+<h2>Histori Pertumbuhan Penduduk per Tahun</h2>
+
+<table border="1" cellpadding="10">
+  <tr>
+    <th>Tahun</th>
+    <th>Jumlah Penduduk</th>
+  </tr>
+  {% for tahun, jumlah in histori.items() %}
+  <tr>
+    <td>{{ tahun }}</td>
+    <td>{{ jumlah }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h3 style="margin-top: 30px;">Visualisasi Grafik Pertumbuhan</h3>
+
+<label for="chartType">Pilih Jenis Grafik:</label>
+<select id="chartType" onchange="updateChartType()">
+  <option value="line">Garis</option>
+  <option value="bar">Batang</option>
+</select>
+
+<canvas id="barChart" width="100%" height="40"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const labels = {{ histori.keys() | list | tojson }};
+  const dataValues = {{ histori.values() | list | tojson }};
+  let chartInstance;
+
+  function renderChart(type) {
+    const ctx = document.getElementById('barChart').getContext('2d');
+    if (chartInstance) {
+      chartInstance.destroy();
+    }
+
+    chartInstance = new Chart(ctx, {
+      type: type,
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Jumlah Penduduk',
+          data: dataValues,
+          backgroundColor: type === 'bar' ? 'rgba(54, 162, 235, 0.6)' : 'transparent',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 2,
+          fill: false,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true },
+          title: {
+            display: true,
+            text: 'Pertumbuhan Penduduk per Tahun'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: false,
+            title: {
+              display: true,
+              text: 'Jumlah Penduduk'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Tahun'
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function updateChartType() {
+    const selectedType = document.getElementById('chartType').value;
+    renderChart(selectedType);
+  }
+
+  // Tampilkan grafik default sebagai Garis
+  renderChart('line');
+</script>
+
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Riwayat Prediksi{% endblock %}
+{% block content %}
+
+<h2>Riwayat Prediksi</h2>
+
+{% if prediksi_list %}
+  <table border="1" cellpadding="8" cellspacing="0">
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Petugas Prediksi</th>
+        <th>Rentang Prediksi</th>
+        <th>Tanggal Prediksi</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in prediksi_list %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ row.username }}</td>
+          <td>{{ row.rentang }}</td>
+          <td>{{ row.tanggal_prediksi }}</td>
+          <td>
+            <a href="{{ url_for('lihat_prediksi', prediksi_id=row.id) }}">Lihat Detail</a> |
+            <a href="#" class="hapus-btn" data-id="{{ row.id }}">Hapus</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p style="color: gray;">Tidak ada data riwayat yang tersedia.</p>
+{% endif %}
+
+<!-- Modal Konfirmasi -->
+<div id="modalKonfirmasi" class="modal">
+  <div class="modal-content">
+    <p>Yakin ingin menghapus data ini?</p>
+    <div class="modal-actions">
+      <button id="btnYa">Ya</button>
+      <button id="btnBatal">Batal</button>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript Modal -->
+<script>
+  let selectedId = null;
+  const modal = document.getElementById('modalKonfirmasi');
+  const btnYa = document.getElementById('btnYa');
+  const btnBatal = document.getElementById('btnBatal');
+
+  document.querySelectorAll('.hapus-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      selectedId = this.getAttribute('data-id');
+      modal.style.display = 'block';
+    });
+  });
+
+  btnYa.addEventListener('click', function () {
+    window.location.href = `/hapus_prediksi/${selectedId}`;
+  });
+
+  btnBatal.addEventListener('click', function () {
+    modal.style.display = 'none';
+    selectedId = null;
+  });
+
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
+</script>
+
+{% endblock %}

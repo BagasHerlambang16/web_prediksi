@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% block title %}Prediksi Pertumbuhan{% endblock %}
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style_prediksi.css') }}">
+<h2>Form Prediksi Pertumbuhan Penduduk</h2>
+
+<div class="form-container">
+  <form method="POST">
+    <div class="form-group">
+      <label for="bulan_mulai">Bulan Mulai:</label>
+      <select name="bulan_mulai" id="bulan_mulai" required
+      oninvalid="this.setCustomValidity('Silakan pilih bulan Mulai terlebih dahulu.')"
+              oninput="this.setCustomValidity('')">
+        <option value="" disabled selected>-Pilih Bulan-</option>
+        {% for i in range(1, 13) %}
+          <option value="{{ i }}">{{ ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][i-1] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="tahun_mulai">Tahun Mulai:</label>
+      <input type="number" name="tahun_mulai" id="tahun_mulai" min="2025" value="2025" required 
+       oninvalid="this.setCustomValidity('Tahun mulai tidak boleh kurang dari 2025.')"
+       oninput="this.setCustomValidity('')">
+
+    </div>
+
+    <div class="form-group">
+      <label for="bulan_selesai">Bulan Selesai:</label>
+      <select name="bulan_selesai" id="bulan_selesai" required
+              oninvalid="this.setCustomValidity('Silakan pilih bulan selesai terlebih dahulu.')"
+              oninput="this.setCustomValidity('')">
+        <option value="" disabled selected>-Pilih Bulan-</option>
+        {% for i in range(1, 13) %}
+          <option value="{{ i }}">{{ ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][i-1] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+
+    <div class="form-group">
+      <label for="tahun_selesai">Tahun Selesai:</label>
+      <input type="number" name="tahun_selesai" id="tahun_selesai" min="2025" value="2025" required 
+       oninvalid="this.setCustomValidity('Tahun selesai tidak boleh kurang dari 2025.')"
+       oninput="this.setCustomValidity('')">
+    </div>
+
+    <div class="form-actions">
+      <button type="submit">Prediksi</button>
+    </div>
+  </form>
+</div>
+
+{% if hasil %}
+  {% set bulan_id = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] %}
+
+  <h3>Hasil Prediksi</h3>
+<table border="1">
+  <tr><th>Bulan</th><th>Tahun</th><th>Jumlah</th></tr>
+  {% for tanggal, jumlah in hasil.items() %}
+    {% set parts = tanggal.split(' ') %}
+    {% set bulan = parts[0] %}
+    {% set tahun = parts[1] %}
+    {% set bulan_index = [
+      'January','February','March','April','May','June','July','August','September','October','November','December'
+    ].index(bulan) + 1 %}
+    {% set bulan_indonesia = bulan_id[bulan_index] %}
+    <tr>
+      <td>{{ bulan_indonesia }}</td>
+      <td>{{ tahun }}</td>
+      <td>{{ jumlah }}</td>
+    </tr>
+  {% endfor %}
+</table>
+
+
+  <!-- Dropdown & Grafik -->
+  <h3 style="margin-top: 30px;">Visualisasi Hasil Prediksi</h3>
+  <label for="chartType">Pilih Jenis Grafik:</label>
+  <select id="chartType" onchange="updateChartType()">
+    <option value="line">Garis</option>
+    <option value="bar">Batang</option>
+  </select>
+
+  <canvas id="chartPrediksi" width="100%" height="40"></canvas>
+
+  <!-- Tombol Simpan di Bawah Grafik -->
+ <form method="POST" action="/simpan_prediksi" class="form-actions">
+  <input type="hidden" name="data_prediksi" value='{{ hasil | tojson }}'>
+  <button type="submit">Simpan Hasil Prediksi</button>
+</form>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const chartData = {{ chart_data | safe }};
+    const labelMap = {
+      'January': 'Januari', 'February': 'Februari', 'March': 'Maret',
+      'April': 'April', 'May': 'Mei', 'June': 'Juni', 'July': 'Juli',
+      'August': 'Agustus', 'September': 'September', 'October': 'Oktober',
+      'November': 'November', 'December': 'Desember'
+    };
+
+    const labelsID = chartData.labels.map(lbl => {
+      const [bulan, tahun] = lbl.split(" ");
+      return `${labelMap[bulan]} ${tahun}`;
+    });
+
+    let chartInstance;
+
+    function createChart(type) {
+      const ctx = document.getElementById('chartPrediksi').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+
+      chartInstance = new Chart(ctx, {
+        type: type,
+        data: {
+          labels: labelsID,
+          datasets: [{
+            label: 'Jumlah Penduduk',
+            data: chartData.data,
+            backgroundColor: type === 'bar' ? 'rgba(54, 162, 235, 0.5)' : 'transparent',
+            borderColor: 'blue',
+            borderWidth: 2,
+            fill: false,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            title: {
+              display: true,
+              text: 'Prediksi Pertumbuhan Penduduk'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: 'Jumlah Penduduk'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Bulan & Tahun'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function updateChartType() {
+      const selectedType = document.getElementById('chartType').value;
+      createChart(selectedType);
+    }
+
+    // Grafik awal default: Garis
+    createChart('line');
+  </script>
+
+  
+
+  
+{% endif %}
+{% endblock %}

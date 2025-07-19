@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Sistem Prediksi{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <h2 class="logo">
+        <img src="{{ url_for('static', filename='images/logonb.png') }}" alt="Logo" style="height: 150px;">
+      </h2>
+      {% set active_page = request.path %}
+      <ul>
+        <li><a href="/dashboard" class="{% if active_page == '/dashboard' %}active{% endif %}">Dashboard</a></li>
+        <li><a href="/pertumbuhan" class="{% if active_page == '/pertumbuhan' %}active{% endif %}">Pertumbuhan Penduduk</a></li>
+        <li><a href="/perbandingan" class="{% if active_page == '/perbandingan' %}active{% endif %}">Perbandingan Model</a></li>
+        <li><a href="/prediksi" class="{% if active_page == '/prediksi' %}active{% endif %}">Prediks Pertumbuhan</a></li>
+        <li><a href="/riwayat" class="{% if '/riwayat' in active_page %}active{% endif %}">Riwayat Prediksi</a></li>
+        <li><a href="/logout" class="logout">Logout</a></li>
+      </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Top Bar Waktu -->
+     <!-- Top Bar Halaman & Waktu -->
+      {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div class="flash-message">
+      {% for message in messages %}
+        <p>{{ message }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<div class="top-bar">
+  <span class="page-info">
+    {% if '/dashboard' in active_page %}
+      Halaman: Dashboard
+    {% elif '/pertumbuhan' in active_page %}
+      Halaman: Pertumbuhan Penduduk
+    {% elif '/perbandingan' in active_page %}
+      Halaman: Perbandingan Model
+    {% elif '/prediksi' in active_page  %}
+      Halaman: Prediksi
+    {% elif active_page == '/riwayat' %}
+      Halaman: Riwayat Prediksi
+    {% elif active_page.startswith('/riwayat/') %}
+      Halaman: Detail Prediksi
+    {% else %}
+      Halaman: Beranda
+    {% endif %}
+  </span>
+  <span id="datetime">Memuat waktu...</span>
+</div>
+
+
+
+      <!-- Halaman Konten -->
+      <div class="page-content">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Script Real-time Jam & Tanggal -->
+  <script>
+    function updateDateTime() {
+      const now = new Date();
+      const hari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+      const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+      const hariText = hari[now.getDay()];
+      const tanggal = now.getDate();
+      const bulanText = bulan[now.getMonth()];
+      const tahun = now.getFullYear();
+      const jam = String(now.getHours()).padStart(2, '0');
+      const menit = String(now.getMinutes()).padStart(2, '0');
+      const detik = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('datetime').textContent =
+        `${hariText}, ${tanggal} ${bulanText} ${tahun} - ${jam}:${menit}:${detik}`;
+    }
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+  </script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}Perbandingan Model{% endblock %}
+{% block content %}
+
+<h2>Perbandingan Evaluasi Model</h2>
+
+<table border="1" cellpadding="10">
+    <tr>
+        <th>Metode</th>
+      <!--  <th>RMSE</th> 
+        <th>R²</th>
+        <th>MAE</th> -->
+        <th>MAPE</th>
+        <th>Akurasi (%)</th>
+    </tr>
+    {% for model, nilai in hasil.items() %}
+    <tr>
+        <td>{{ model }}</td>
+       <!-- <td>{{ nilai.RMSE }}</td>
+        <td>{{ nilai.R2 }}</td>
+        <td>{{ nilai.MAE }}</td> -->
+        <td>{{ nilai.MAPE }}</td>
+        <td>{{ nilai.Accuracy }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h3>Grafik Prediksi Jumlah Penduduk vs Aktual</h3>
+<canvas id="chartPrediksi" width="100%" height="40"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const chartData = {{ chart_data | safe }};
+
+  const ctx = document.getElementById('chartPrediksi');
+  const datasets = Object.entries(chartData.data).map(([label, data]) => {
+    const colorMap = {
+      'Actual': 'black',
+      'ARIMA': 'blue',
+      'SARIMA': 'green',
+      'Exponential Smoothing': 'orange',
+      'HYBRID': 'purple'
+    };
+    return {
+      label: label,
+      data: data,
+      borderColor: colorMap[label],
+      backgroundColor: colorMap[label],   
+      fill: false,
+      tension: 0.2,
+      pointHoverRadius: 8
+      };
+  });
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: chartData.labels,
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Prediksi Jumlah Penduduk vs Aktual'
+        },
+        legend: {
+          position: 'top'
+        }
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Bulan & Tahun'
+          }
+        },
+        y: {
+          beginAtZero: false,
+          title: {
+            display: true,
+            text: 'Jumlah Penduduk'
+          }
+        }
+      }
+    }
+  });
+</script>
+
+{% endblock %}

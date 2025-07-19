@@ -1,0 +1,56 @@
+.form-container {
+  max-width: 500px;
+  margin: auto;
+  padding: 20px;
+  border-radius: 10px;
+  background-color: #f3f3f3;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  font-family: Segoe UI, sans-serif;
+}
+.judul-prediksi {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #333;
+    
+  }
+
+.form-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-group select,
+.form-group input {
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.form-actions {
+  text-align: center;
+}
+
+.form-actions button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.form-actions button:hover {
+  background-color: #0056b3;
+}

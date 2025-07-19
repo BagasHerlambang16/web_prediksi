@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% block title %}Detail Prediksi{% endblock %}
+{% block content %}
+<a href="{{ url_for('riwayat') }}" class="btn-kembali">← Kembali ke Halaman Riwayat Prediksi</a>
+<h2>Detail Prediksi</h2>
+
+
+
+<p><strong>Petugas Prediksi:</strong> {{ data.username }}</p>
+<p><strong>Rentang Prediksi:</strong> {{ data.rentang }}</p>
+<p><strong>Tanggal Prediksi:</strong> {{ data.tanggal_prediksi }}</p>
+
+
+<h3>Hasil Prediksi</h3>
+<table border="1">
+  <tr>
+    <th>Bulan</th>
+    <th>Tahun</th>
+    <th>Jumlah Penduduk</th>
+  </tr>
+  {% set bulan_map = {
+    'January': 'Januari', 'February': 'Februari', 'March': 'Maret',
+    'April': 'April', 'May': 'Mei', 'June': 'Juni', 'July': 'Juli',
+    'August': 'Agustus', 'September': 'September', 'October': 'Oktober',
+    'November': 'November', 'December': 'Desember'
+  } %}
+  {% for bulan_tahun, jumlah in hasil.items() %}
+    {% set parts = bulan_tahun.split(' ') %}
+    {% set bulan_indonesia = bulan_map[parts[0]] %}
+    <tr>
+      <td>{{ bulan_indonesia }}</td>
+      <td>{{ parts[1] }}</td>
+      <td>{{ jumlah }}</td>
+    </tr>
+  {% endfor %}
+</table>
+
+
+<h3 style="margin-top: 30px;">Visualisasi Hasil Prediksi</h3>
+<label for="chartType">Pilih Jenis Grafik:</label>
+<select id="chartType" onchange="updateChartType()">
+  <option value="line">Garis</option>
+  <option value="bar">Batang</option>
+</select>
+
+<canvas id="chartPrediksi" width="100%" height="40"></canvas>
+
+<!-- Tombol Download -->
+<div class="form-actions">
+  <button id="downloadPDF">Download PDF</button>
+  <button onclick="downloadExcel()">Download Excel</button>
+</div>
+
+<!-- Chart.js untuk visualisasi -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- jsPDF untuk PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- autoTable plugin untuk tabel di PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+<!-- SheetJS (xlsx.js) untuk ekspor Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+
+
+
+<script>
+  const chartData = {{ chart_data | safe }};
+  const labelMap = {
+    'January': 'Januari', 'February': 'Februari', 'March': 'Maret',
+    'April': 'April', 'May': 'Mei', 'June': 'Juni', 'July': 'Juli',
+    'August': 'Agustus', 'September': 'September', 'October': 'Oktober',
+    'November': 'November', 'December': 'Desember'
+  };
+
+  const labelsID = chartData.labels.map(lbl => {
+    const [bulan, tahun] = lbl.split(" ");
+    return `${labelMap[bulan]} ${tahun}`;
+  });
+
+  const dataValues = chartData.data;
+  let chartInstance;
+
+  function createChart(type) {
+    const ctx = document.getElementById('chartPrediksi').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+      type: type,
+      data: {
+        labels: labelsID,
+        datasets: [{
+          label: 'Jumlah Penduduk',
+          data: dataValues,
+          backgroundColor: type === 'bar' ? 'rgba(54, 162, 235, 0.5)' : 'transparent',
+          borderColor: 'blue',
+          borderWidth: 2,
+          fill: false,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'top' },
+          title: {
+            display: true,
+            text: 'Prediksi Pertumbuhan Penduduk'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: false,
+            title: {
+              display: true,
+              text: 'Jumlah Penduduk'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Bulan & Tahun'
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function updateChartType() {
+    const selectedType = document.getElementById('chartType').value;
+    createChart(selectedType);
+  }
+
+  // Grafik default: Garis
+  createChart('line');
+  // Download PDF
+   document.getElementById('downloadPDF').addEventListener('click', function () {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const bulanID = {
+    'January': 'Januari', 'February': 'Februari', 'March': 'Maret',
+    'April': 'April', 'May': 'Mei', 'June': 'Juni', 'July': 'Juli',
+    'August': 'Agustus', 'September': 'September', 'October': 'Oktober',
+    'November': 'November', 'December': 'Desember'
+  };
+
+  doc.setFontSize(12);
+  doc.text("Petugas Prediksi: {{ data.username }}", 14, 25);
+  doc.text("Rentang Prediksi: {{ data.rentang }}", 14, 32);
+  doc.text("Tanggal Prediksi: {{ data.tanggal_prediksi }}", 14, 39);
+
+
+  doc.setFontSize(13);
+  doc.text("Hasil Prediksi", 14, 47);
+
+
+  const data = chartData.labels.map((label, i) => {
+    const [bulanInggris, tahun] = label.split(" ");
+    const bulanIndonesia = bulanID[bulanInggris] || bulanInggris;
+    return [bulanIndonesia, tahun, chartData.data[i]];
+  });
+
+  // Tabel
+  doc.autoTable({
+    startY: 52,
+    head: [['Bulan', 'Tahun', 'Jumlah Penduduk']],
+    body: data
+  });
+
+  // Ambil posisi akhir tabel
+  const finalY = doc.previousAutoTable.finalY || 60;
+
+  // Ambil gambar dari grafik yang ada
+  const canvas = document.getElementById('chartPrediksi');
+  const imgData = canvas.toDataURL('image/png', 1.0);
+
+  // Tambahkan grafik ke PDF di bawah tabel
+  doc.text("Visualisasi Hasil Prediksi", 14, finalY + 10);
+  doc.addImage(imgData, 'PNG', 15, finalY + 10, 180, 80); // ukuran grafik 180x80mm
+
+  // Simpan PDF
+  doc.save("detail_prediksi.pdf");
+});
+
+  // Download Excel
+  function downloadExcel() {
+  const wb = XLSX.utils.book_new();
+
+  // Mapping bulan ke Bahasa Indonesia
+  const bulanID = {
+    'January': 'Januari', 'February': 'Februari', 'March': 'Maret',
+    'April': 'April', 'May': 'Mei', 'June': 'Juni', 'July': 'Juli',
+    'August': 'Agustus', 'September': 'September', 'October': 'Oktober',
+    'November': 'November', 'December': 'Desember'
+  };
+
+  // Ambil data dan ubah ke format Bulan (ID), Tahun, Jumlah
+  const excelData = [
+    ['Bulan', 'Tahun', 'Jumlah Penduduk'] // Header
+  ];
+
+  chartData.labels.forEach((label, i) => {
+    const [bulanInggris, tahun] = label.split(" ");
+    const bulanIndonesia = bulanID[bulanInggris] || bulanInggris;
+    const jumlah = chartData.data[i];
+    excelData.push([bulanIndonesia, tahun, jumlah]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(excelData);
+  XLSX.utils.book_append_sheet(wb, ws, "Hasil Prediksi");
+  XLSX.writeFile(wb, "detail_prediksi.xlsx");
+}
+</script>
+
+
+<!-- AutoTable untuk PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+
+{% endblock %}
